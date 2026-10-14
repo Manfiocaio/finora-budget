@@ -1,4 +1,5 @@
 <form method="post" action="{{ acao }}" class="form-grade">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
   <label>Nome da meta
     <input name="nome" maxlength="100" required value="{{ form.get('nome', '') }}" placeholder="Ex.: Viagem">
   </label>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17155e">
+  <title>{% block titulo %}Acessar · Finora{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-body">
+  <main class="auth-shell">
+    <aside class="auth-brand">
+      <a class="marca" href="{{ url_for('login') }}">
+        <span class="marca-sinal" aria-hidden="true"><span></span></span>
+        <span class="marca-texto">finora<small>FINANÇAS PESSOAIS</small></span>
+      </a>
+      <div class="auth-brand-copy">
+        <span class="sobre-titulo">Mais clareza. Mais tranquilidade.</span>
+        <h1>Cuide do seu dinheiro com intenção.</h1>
+        <p>Organize suas finanças, acompanhe seus objetivos e tenha mais segurança para decidir.</p>
+      </div>
+      <span class="auth-brand-footer">Seu dinheiro, com mais clareza.</span>
+    </aside>
+    <section class="auth-panel">
+      <div class="auth-panel-inner">
+        {% with msgs = get_flashed_messages(with_categories=true) %}
+          {% for cat, msg in msgs %}<div class="aviso aviso-{{ cat }}" role="status">{{ msg }}</div>{% endfor %}
+        {% endwith %}
+        {% block auth_content %}{% endblock %}
+        <p class="auth-privacy">Seus dados financeiros são privados e pertencem à sua conta.</p>
+      </div>
+    </section>
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

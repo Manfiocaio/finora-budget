@@ -1,0 +1,26 @@
+{% extends "auth_base.html" %}
+{% block titulo %}Criar conta · Finora{% endblock %}
+{% block auth_content %}
+<div class="auth-heading">
+  <span class="sobre-titulo">Comece por aqui</span>
+  <h2>Crie sua conta</h2>
+  <p>Seu espaço financeiro pessoal, só seu.</p>
+</div>
+{% if erros %}
+  <div class="aviso aviso-erro" role="alert"><ul>{% for erro in erros %}<li>{{ erro }}</li>{% endfor %}</ul></div>
+{% endif %}
+<form method="post" action="{{ url_for('cadastro') }}" class="auth-form">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+  <label for="email">E-mail
+    <input id="email" type="email" name="email" autocomplete="email" maxlength="254" required autofocus value="{{ form.get('email', '') }}" placeholder="voce@exemplo.com">
+  </label>
+  <label for="senha">Senha
+    <input id="senha" type="password" name="senha" autocomplete="new-password" minlength="8" maxlength="128" required placeholder="Pelo menos 8 caracteres">
+  </label>
+  <label for="confirmacao">Confirme sua senha
+    <input id="confirmacao" type="password" name="confirmacao" autocomplete="new-password" minlength="8" maxlength="128" required placeholder="Digite a senha novamente">
+  </label>
+  <button class="btn auth-submit" type="submit">Criar conta</button>
+</form>
+<p class="auth-switch">Já tem uma conta? <a href="{{ url_for('login') }}">Entrar</a></p>
+{% endblock %}

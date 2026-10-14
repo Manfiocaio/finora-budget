@@ -8,6 +8,22 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <header class="mobile-header">
+    <a class="mobile-marca" href="{{ url_for('dashboard') }}" aria-label="Finora, início">
+      <span class="marca-sinal" aria-hidden="true"><span></span></span>
+      <span>finora</span>
+    </a>
+    <div class="mobile-account">
+      <span class="mobile-avatar" aria-hidden="true">{{ (usuario_atual.nome or usuario_atual.email)[0]|upper }}</span>
+      <span class="mobile-account-name">{{ usuario_atual.nome }}</span>
+      <form method="post" action="{{ url_for('logout') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="mobile-logout" aria-label="Sair da conta" title="Sair da conta">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5m5 5H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg>
+        </button>
+      </form>
+    </div>
+  </header>
   <nav class="menu" aria-label="Principal">
     <a class="marca" href="{{ url_for('dashboard') }}">
       <span class="marca-sinal" aria-hidden="true"><span></span></span>
@@ -32,8 +48,14 @@
       <span>Metas</span>
     </a>
     <div class="menu-rodape">
-      <span class="avatar-usuario" aria-hidden="true">F</span>
-      <span><strong>Meu espaço</strong><small>Controle pessoal</small></span>
+      <span class="avatar-usuario" aria-hidden="true">{{ (usuario_atual.nome or usuario_atual.email)[0]|upper }}</span>
+      <span class="usuario-info"><strong>{{ usuario_atual.nome }}</strong><small>Conta pessoal</small></span>
+      <form method="post" action="{{ url_for('logout') }}" class="logout-form">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="logout-btn" aria-label="Sair da conta" title="Sair da conta">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5m5 5H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg>
+        </button>
+      </form>
     </div>
   </nav>
   <main>
@@ -48,6 +70,25 @@
     <footer class="rodape-pagina">Finora <span>·</span> Seu dinheiro, com mais clareza.</footer>
     </div>
   </main>
+  {% set rota = request.endpoint or '' %}
+  <nav class="bottom-nav" aria-label="Navegação móvel">
+    <a href="{{ url_for('dashboard') }}" class="{{ 'ativo' if rota == 'dashboard' }}" {% if rota == 'dashboard' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="4" rx="1.5"/><rect x="13.5" y="10.5" width="7" height="10" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
+      <span>Início</span>
+    </a>
+    <a href="{{ url_for('movimentacoes') }}" class="{{ 'ativo' if 'movimentac' in rota }}" {% if 'movimentac' in rota %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/><circle cx="12" cy="12" r="9"/></svg>
+      <span>Movimentos</span>
+    </a>
+    <a href="{{ url_for('relatorios') }}" class="{{ 'ativo' if rota == 'relatorios' }}" {% if rota == 'relatorios' %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V11m5 8.5V5m5 14.5v-6m5 6V8"/><path d="M2.5 20.5h19"/></svg>
+      <span>Relatórios</span>
+    </a>
+    <a href="{{ url_for('metas') }}" class="{{ 'ativo' if 'meta' in rota }}" {% if 'meta' in rota %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+      <span>Metas</span>
+    </a>
+  </nav>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>

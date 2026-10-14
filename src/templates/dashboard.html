@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% block titulo %}Dashboard · Finora{% endblock %}
 {% block conteudo %}
-<header class="cabecalho-pagina">
+<header class="cabecalho-pagina dashboard-heading">
   <div>
-    <span class="sobre-titulo">Seu panorama financeiro</span>
-    <h1>Visão geral</h1>
-    <p>Acompanhe suas receitas, despesas e movimentações em um só lugar.</p>
+    <span class="sobre-titulo">SEU ESPAÇO, NO SEU RITMO</span>
+    <h1>{{ saudacao }}, {{ usuario_atual.nome }}.</h1>
+    <p>Bom ter você por aqui. Que tal dar o próximo passo nos seus planos?</p>
   </div>
+  <a class="btn dashboard-acao" href="{{ url_for('movimentacoes') }}">Nova movimentação <span aria-hidden="true">＋</span></a>
 </header>
 <section class="indicadores">
   <article class="card saldo {{ 'negativo' if saldo < 0 }}">

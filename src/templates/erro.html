@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.html" if usuario_atual else "auth_base.html" %}
 {% block titulo %}Erro · Finora{% endblock %}
 {% block conteudo %}
 <h1>Não foi possível acessar o banco de dados</h1>
@@ -6,5 +6,16 @@
   <p>Verifique se o MySQL está iniciado no XAMPP, se o <code>database.sql</code> foi importado e se o arquivo <code>.env</code> está correto.</p>
   <p class="vazio"><small>Detalhe técnico: {{ detalhe }}</small></p>
   <a class="btn" href="{{ url_for('dashboard') }}">Tentar novamente</a>
+</section>
+{% endblock %}
+{% block auth_content %}
+<div class="auth-heading">
+  <span class="sobre-titulo">Finora</span>
+  <h2>Não foi possível acessar o banco de dados</h2>
+  <p>Verifique se o MySQL está iniciado no XAMPP, se o banco está configurado e tente novamente.</p>
+</div>
+<section class="card">
+  <p class="vazio"><small>Detalhe técnico: {{ detalhe }}</small></p>
+  <a class="btn" href="{{ url_for('login') }}">Voltar para o login</a>
 </section>
 {% endblock %}

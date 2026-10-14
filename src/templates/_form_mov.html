@@ -1,4 +1,5 @@
 <form method="post" action="{{ acao }}" class="form-grade">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
   <label>Descrição
     <input name="descricao" maxlength="120" required value="{{ form.get('descricao', '') }}" placeholder="Ex.: Mercado">
   </label>

@@ -22,12 +22,14 @@
     </div>
     <p class="meta-valores">{{ m.valor_acumulado|brl }} de {{ m.valor_objetivo|brl }}</p>
     <form method="post" action="{{ url_for('depositar_meta', id_=m.id) }}" class="depositar">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
       <input name="valor" inputmode="decimal" placeholder="Guardar R$" aria-label="Valor a guardar" required>
       <button class="btn btn-sec btn-p" type="submit">Adicionar</button>
     </form>
     <div class="acoes">
       <a class="btn btn-sec btn-p" href="{{ url_for('editar_meta', id_=m.id) }}">Editar</a>
       <form method="post" action="{{ url_for('excluir_meta', id_=m.id) }}" data-confirmar="Excluir a meta '{{ m.nome }}'?">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
         <button class="btn btn-perigo btn-p" type="submit">Excluir</button>
       </form>
     </div>
