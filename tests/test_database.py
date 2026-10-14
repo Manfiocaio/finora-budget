@@ -18,13 +18,26 @@ def _csrf(response):
 
 def _register(client, email):
     page = client.get("/cadastro")
-    return client.post(
+    response = client.post(
         "/cadastro",
         data={
             "_csrf_token": _csrf(page),
             "email": email,
             "senha": "senha-segura-123",
             "confirmacao": "senha-segura-123",
+        },
+    )
+    assert response.status_code == 302
+    assert response.location.endswith("/boas-vindas")
+
+    welcome = client.get("/boas-vindas")
+    assert welcome.status_code == 200
+    assert b"Como podemos chamar voc\xc3\xaa?" in welcome.data
+    return client.post(
+        "/boas-vindas",
+        data={
+            "_csrf_token": _csrf(welcome),
+            "nome": email.split("@")[0],
         },
     )
 
@@ -66,6 +79,13 @@ def test_cadastro_login_logout_e_protecao_dos_dados(tmp_path, monkeypatch):
 
     assert user_a.get("/movimentacoes").status_code == 302
     assert _register(user_a, "pessoa-a@example.com").status_code == 302
+    home = user_a.get("/")
+    assert home.status_code == 200
+    assert any(greeting in home.data for greeting in (
+        b"Bom dia, pessoa-a.",
+        b"Boa tarde, pessoa-a.",
+        b"Boa noite, pessoa-a.",
+    ))
 
     page = user_a.get("/movimentacoes")
     movement_response = user_a.post(
