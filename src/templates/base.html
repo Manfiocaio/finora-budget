@@ -52,6 +52,14 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
       <span>Metas</span>
     </a>
+    <a href="{{ url_for('orcamentos') }}" class="{{ 'ativo' if rota == 'orcamentos' }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h16v12H4z"/><path d="M4 7.5V5a1.5 1.5 0 0 1 1.5-1.5H18"/><path d="M15 12h5"/></svg>
+      <span>Planejamento</span>
+    </a>
+    <a href="{{ url_for('recorrencias') }}" class="{{ 'ativo' if rota == 'recorrencias' }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M4.5 9A7.5 7.5 0 0 1 18 6l2 2"/><path d="M4 17v-5h5"/><path d="M19.5 15A7.5 7.5 0 0 1 6 18l-2-2"/></svg>
+      <span>Recorrências</span>
+    </a>
     <a href="{{ url_for('investimentos') }}" class="{{ 'ativo' if 'investimento' in rota }}">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M5 16V9m5 7V5m5 11v-4m5 4V7"/><path d="m4 6 5-3 5 5 6-4"/></svg>
       <span>Investimentos</span>
@@ -102,6 +110,10 @@
     <a href="{{ url_for('metas') }}" class="{{ 'ativo' if 'meta' in rota }}" {% if 'meta' in rota %}aria-current="page"{% endif %}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
       <span>Metas</span>
+    </a>
+    <a href="{{ url_for('orcamentos') }}" class="{{ 'ativo' if rota in ('orcamentos', 'recorrencias') }}" {% if rota in ('orcamentos', 'recorrencias') %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h16v12H4z"/><path d="M4 7.5V5a1.5 1.5 0 0 1 1.5-1.5H18"/><path d="M15 12h5"/></svg>
+      <span>Planejar</span>
     </a>
     <a href="{{ url_for('investimentos') }}" class="{{ 'ativo' if 'investimento' in rota }}" {% if 'investimento' in rota %}aria-current="page"{% endif %}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M5 16V9m5 7V5m5 11v-4m5 4V7"/><path d="m4 6 5-3 5 5 6-4"/></svg>

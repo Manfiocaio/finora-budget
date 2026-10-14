@@ -7,13 +7,26 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 # Segredos e arquivos privados
-.env
+.env*
+!.env.example
 *.sql.bak
 *.dump
 private/
+# Dados locais e arquivos enviados por usuários
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.sqlite-shm
+*.sqlite-wal
+/src/instance/
 # Logs e temporários
 *.log
 *.tmp
+.coverage
+htmlcov/
+build/
+dist/
 .DS_Store
 Thumbs.db
 .idea/

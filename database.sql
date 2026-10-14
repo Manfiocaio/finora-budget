@@ -73,3 +73,32 @@ CREATE TABLE IF NOT EXISTS resgates_investimentos (
   CONSTRAINT fk_resgates_investimento FOREIGN KEY (investimento_id) REFERENCES investimentos(id),
   CONSTRAINT fk_resgates_usuario FOREIGN KEY (user_id) REFERENCES usuarios(id)
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS orcamentos (
+  id        INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id   INT UNSIGNED NOT NULL,
+  categoria VARCHAR(40) NOT NULL,
+  limite    DECIMAL(12,2) NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_orcamento_usuario_categoria (user_id, categoria),
+  CONSTRAINT chk_orcamento_limite CHECK (limite > 0),
+  CONSTRAINT fk_orcamentos_usuario FOREIGN KEY (user_id) REFERENCES usuarios(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS recorrencias (
+  id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id      INT UNSIGNED NOT NULL,
+  descricao    VARCHAR(120) NOT NULL,
+  valor        DECIMAL(12,2) NOT NULL,
+  tipo         ENUM('receita','despesa') NOT NULL,
+  categoria    VARCHAR(40) NOT NULL,
+  frequencia   VARCHAR(12) NOT NULL,
+  dia_mes      TINYINT UNSIGNED NOT NULL,
+  proxima_data DATE NOT NULL,
+  data_fim     DATE NULL,
+  ativa        TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (id),
+  CONSTRAINT chk_recorrencia_valor CHECK (valor > 0),
+  INDEX idx_recorrencias_vencimento (user_id, ativa, proxima_data),
+  CONSTRAINT fk_recorrencias_usuario FOREIGN KEY (user_id) REFERENCES usuarios(id)
+) ENGINE=InnoDB;

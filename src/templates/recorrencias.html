@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block titulo %}Movimentações recorrentes · Finora{% endblock %}
+{% block conteudo %}
+<header class="cabecalho-pagina">
+  <div>
+    <span class="sobre-titulo">Menos tarefas repetidas</span>
+    <h1>Movimentações recorrentes</h1>
+    <p>Agende contas e recebimentos para que sejam lançados automaticamente na data prevista.</p>
+  </div>
+  <a class="btn btn-sec" href="{{ url_for('orcamentos') }}">Ver orçamentos</a>
+</header>
+
+<section class="card">
+  <div class="card-titulo">
+    <div><h2>Agendar movimentação</h2><p>Se uma data passar sem acesso ao Finora, os lançamentos vencidos são recuperados sem duplicação.</p></div>
+  </div>
+  <form method="post" action="{{ url_for('nova_recorrencia') }}" class="form-grade">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <label>Descrição
+      <input name="descricao" maxlength="120" required value="{{ form.get('descricao', '') }}" placeholder="Ex.: Aluguel">
+    </label>
+    <label>Valor (R$)
+      <input name="valor" inputmode="decimal" required value="{{ form.get('valor', '') }}" placeholder="0,00">
+    </label>
+    <label>Tipo
+      <select name="tipo" required>
+        <option value="despesa" {{ 'selected' if form.get('tipo', 'despesa') == 'despesa' }}>Despesa</option>
+        <option value="receita" {{ 'selected' if form.get('tipo') == 'receita' }}>Receita</option>
+      </select>
+    </label>
+    <label>Categoria
+      <select name="categoria" required>
+        {% for categoria in categorias %}
+        <option value="{{ categoria }}" {{ 'selected' if form.get('categoria') == categoria }}>{{ categoria }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Frequência
+      <select name="frequencia" required>
+        {% for valor_frequencia, rotulo in frequencias.items() %}
+        <option value="{{ valor_frequencia }}" {{ 'selected' if form.get('frequencia') == valor_frequencia }}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Primeiro lançamento
+      <input type="date" name="inicio" required value="{{ form.get('inicio') or hoje }}">
+    </label>
+    <label>Último lançamento <span class="campo-opcional">(opcional)</span>
+      <input type="date" name="data_fim" value="{{ form.get('data_fim', '') }}">
+    </label>
+    <button class="btn" type="submit">Agendar</button>
+  </form>
+</section>
+
+<section class="card">
+  <div class="card-titulo">
+    <div><h2>Agendamentos</h2><p>Você pode pausar e reativar uma recorrência quando precisar.</p></div>
+  </div>
+  {% if lista %}
+  <div class="tabela-rolagem">
+    <table>
+      <thead><tr><th>Próxima data</th><th>Descrição</th><th>Frequência</th><th>Status</th><th class="dir">Valor</th><th></th></tr></thead>
+      <tbody>
+      {% for item in lista %}
+        <tr>
+          <td>{{ item.proxima_data|data_br }}</td>
+          <td>{{ item.descricao }}<small class="recorrencia-categoria">{{ item.categoria }}{% if item.data_fim %} · até {{ item.data_fim|data_br }}{% endif %}</small></td>
+          <td>{{ frequencias[item.frequencia] }}</td>
+          <td><span class="status-recorrencia {{ 'status-pausada' if not item.ativa }}">{{ 'Ativa' if item.ativa else 'Pausada' }}</span></td>
+          <td class="dir {{ item.tipo }}">{{ '+' if item.tipo == 'receita' else '-' }}{{ item.valor|brl }}</td>
+          <td class="acoes">
+            <form method="post" action="{{ url_for('alternar_recorrencia', id_=item.id) }}">
+              <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+              <button class="btn btn-sec btn-p" type="submit">{{ 'Pausar' if item.ativa else 'Reativar' }}</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="vazio">Nenhuma movimentação recorrente cadastrada.</p>
+  {% endif %}
+</section>
+{% endblock %}

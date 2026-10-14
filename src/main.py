@@ -6,8 +6,10 @@ import os
 import re
 import secrets
 import sqlite3
+import time
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from threading import Thread
 from urllib.parse import urlsplit
 
 import mysql.connector
@@ -17,9 +19,11 @@ from flask import (Flask, abort, flash, g, redirect, render_template, request,
 from werkzeug.security import check_password_hash, generate_password_hash
 
 import database as db
-from calculos import (CATEGORIAS, INDEXADORES_INVESTIMENTO, PRODUTOS_INVESTIMENTO, TIPOS,
+from calculos import (CATEGORIAS, CATEGORIAS_DESPESA, FREQUENCIAS_RECORRENCIA,
+                      INDEXADORES_INVESTIMENTO, PRODUTOS_INVESTIMENTO, TIPOS,
                       calcular_saldo, converter_valor, formatar_brl, mes_valido,
-                      percentual_meta, validar_investimento, validar_meta, validar_movimentacao)
+                      percentual_meta, validar_investimento, validar_meta,
+                      validar_movimentacao, validar_orcamento, validar_recorrencia)
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY") or secrets.token_hex(32)
@@ -164,6 +168,23 @@ def erro_banco(e):
 db.init_db()
 
 
+def _agendador_recorrencias():
+    while True:
+        try:
+            hoje = date.today()
+            for user_id in db.usuarios_com_recorrencias_vencidas(hoje):
+                geradas = db.processar_recorrencias(user_id, hoje)
+                if geradas:
+                    app.logger.info(
+                        "%s movimentação(ões) recorrente(s) lançada(s) para a conta %s.",
+                        geradas,
+                        user_id,
+                    )
+        except (mysql.connector.Error, sqlite3.Error):
+            app.logger.exception("Falha ao processar movimentações recorrentes agendadas.")
+        time.sleep(60)
+
+
 @app.before_request
 def proteger_rotas():
     if request.method == "POST":
@@ -187,6 +208,12 @@ def proteger_rotas():
         return redirect(url_for("login"))
     if not g.usuario.get("nome") and request.endpoint != "boas_vindas":
         return redirect(url_for("boas_vindas"))
+    geradas = db.processar_recorrencias(user_id, date.today())
+    if geradas:
+        flash(
+            f"{geradas} movimentação(ões) recorrente(s) lançada(s) automaticamente.",
+            "ok",
+        )
     return None
 
 
@@ -465,6 +492,88 @@ def excluir_movimentacao(id_):
     return redirect(url_for("movimentacoes"))
 
 
+# ---------- Planejamento ----------
+def _render_orcamentos(mes, form=None, erros=None):
+    user_id = g.usuario["id"]
+    lista = db.listar_orcamentos(user_id, mes)
+    categorias_usadas = {item["categoria"] for item in lista}
+    for item in lista:
+        limite = Decimal(str(item["limite"]))
+        gasto = Decimal(str(item["gasto"] or 0))
+        item["restante"] = limite - gasto
+        item["pct"] = round(float(gasto / limite * 100), 1)
+        item["barra"] = min(item["pct"], 100)
+        item["estourado"] = gasto > limite
+    return render_template(
+        "orcamentos.html",
+        lista=lista,
+        mes=mes,
+        categorias_disponiveis=[
+            categoria for categoria in CATEGORIAS_DESPESA
+            if categoria not in categorias_usadas
+        ],
+        form=form or {},
+        erros=erros or [],
+    )
+
+
+@app.route("/orcamentos")
+def orcamentos():
+    mes = _mes_ou_none(request.args.get("mes")) or date.today().strftime("%Y-%m")
+    return _render_orcamentos(mes)
+
+
+@app.route("/orcamentos/salvar", methods=["POST"])
+def salvar_orcamento():
+    dados, erros = validar_orcamento(request.form)
+    mes = _mes_ou_none(request.form.get("mes")) or date.today().strftime("%Y-%m")
+    if erros:
+        return _render_orcamentos(mes, request.form, erros), 400
+    db.salvar_orcamento(g.usuario["id"], dados["categoria"], dados["limite"])
+    flash(f"Orçamento de {dados['categoria']} salvo.", "ok")
+    return redirect(url_for("orcamentos", mes=mes))
+
+
+@app.route("/orcamentos/<categoria>/excluir", methods=["POST"])
+def excluir_orcamento(categoria):
+    db.excluir_orcamento(g.usuario["id"], categoria)
+    flash("Orçamento removido.", "ok")
+    mes = _mes_ou_none(request.form.get("mes")) or date.today().strftime("%Y-%m")
+    return redirect(url_for("orcamentos", mes=mes))
+
+
+def _render_recorrencias(form=None, erros=None):
+    return render_template(
+        "recorrencias.html",
+        lista=db.listar_recorrencias(g.usuario["id"]),
+        frequencias=FREQUENCIAS_RECORRENCIA,
+        form=form or {},
+        erros=erros or [],
+    )
+
+
+@app.route("/recorrencias")
+def recorrencias():
+    return _render_recorrencias()
+
+
+@app.route("/recorrencias/nova", methods=["POST"])
+def nova_recorrencia():
+    dados, erros = validar_recorrencia(request.form)
+    if erros:
+        return _render_recorrencias(request.form, erros), 400
+    db.criar_recorrencia(g.usuario["id"], dados)
+    flash("Movimentação recorrente agendada.", "ok")
+    return redirect(url_for("recorrencias"))
+
+
+@app.route("/recorrencias/<int:id_>/alternar", methods=["POST"])
+def alternar_recorrencia(id_):
+    db.alternar_recorrencia(g.usuario["id"], id_)
+    flash("Status da recorrência atualizado.", "ok")
+    return redirect(url_for("recorrencias"))
+
+
 # ---------- Relatórios ----------
 @app.route("/relatorios")
 def relatorios():
@@ -640,4 +749,7 @@ def resgatar_investimento(id_):
 
 
 if __name__ == "__main__":
-    app.run(debug=os.getenv("FLASK_DEBUG", "0") == "1")
+    debug = os.getenv("FLASK_DEBUG", "0") == "1"
+    if not debug or os.getenv("WERKZEUG_RUN_MAIN") == "true":
+        Thread(target=_agendador_recorrencias, daemon=True, name="finora-recorrencias").start()
+    app.run(debug=debug)

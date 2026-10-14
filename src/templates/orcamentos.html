@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block titulo %}Orçamentos · Finora{% endblock %}
+{% block conteudo %}
+<header class="cabecalho-pagina">
+  <div>
+    <span class="sobre-titulo">Seu dinheiro com direção</span>
+    <h1>Orçamentos mensais</h1>
+    <p>Defina limites por categoria e acompanhe o ritmo dos seus gastos.</p>
+  </div>
+  <a class="btn btn-sec" href="{{ url_for('recorrencias') }}">Movimentações recorrentes</a>
+</header>
+
+<section class="card">
+  <div class="card-titulo">
+    <div><h2>Resumo do mês</h2><p>O total considera somente despesas realizadas no período.</p></div>
+  </div>
+  <form method="get" class="filtros">
+    <label>Mês <input type="month" name="mes" value="{{ mes }}"></label>
+    <button class="btn btn-sec" type="submit">Ver mês</button>
+  </form>
+  {% if lista %}
+  <div class="orcamentos-lista">
+    {% for item in lista %}
+    <article class="orcamento-item">
+      <div class="orcamento-cabecalho">
+        <div><h3>{{ item.categoria }}</h3><span>{{ item.gasto|brl }} gastos de {{ item.limite|brl }}</span></div>
+        <strong class="{{ 'orcamento-estourado' if item.estourado else '' }}">
+          {% if item.estourado %}{{ (-item.restante)|brl }} acima{% else %}{{ item.restante|brl }} restantes{% endif %}
+        </strong>
+      </div>
+      <div class="trilho" role="progressbar" aria-label="Uso do orçamento de {{ item.categoria }}"
+           aria-valuenow="{{ item.barra }}" aria-valuemin="0" aria-valuemax="100">
+        <i class="{{ 'orcamento-barra-estourada' if item.estourado else 'barra-meta' }}"
+           style="width: {{ item.barra }}%"></i>
+      </div>
+      <div class="orcamento-rodape">
+        <span>{{ item.pct }}% utilizado</span>
+        <div class="acoes">
+          <form method="post" action="{{ url_for('salvar_orcamento') }}" class="orcamento-editar">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="mes" value="{{ mes }}">
+            <input type="hidden" name="categoria" value="{{ item.categoria }}">
+            <label class="sr-only" for="limite-{{ loop.index }}">Novo limite de {{ item.categoria }}</label>
+            <input id="limite-{{ loop.index }}" name="limite" inputmode="decimal"
+                   value="{{ '%.2f'|format(item.limite)|replace('.', ',') }}" required>
+            <button class="btn btn-sec btn-p" type="submit">Atualizar</button>
+          </form>
+          <form method="post" action="{{ url_for('excluir_orcamento', categoria=item.categoria) }}"
+                data-confirmar="Remover o orçamento de {{ item.categoria }}?">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="mes" value="{{ mes }}">
+            <button class="btn btn-perigo btn-p" type="submit">Remover</button>
+          </form>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="vazio">Você ainda não definiu limites para acompanhar neste mês.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <div class="card-titulo">
+    <div><h2>Adicionar categoria</h2><p>Os limites são mensais e se repetem automaticamente a cada mês.</p></div>
+  </div>
+  {% if categorias_disponiveis %}
+  <form method="post" action="{{ url_for('salvar_orcamento') }}" class="form-grade">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="mes" value="{{ mes }}">
+    <label>Categoria
+      <select name="categoria" required>
+        {% for categoria in categorias_disponiveis %}<option value="{{ categoria }}">{{ categoria }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Limite mensal (R$)
+      <input name="limite" inputmode="decimal" required value="{{ form.get('limite', '') }}" placeholder="0,00">
+    </label>
+    <button class="btn" type="submit">Salvar orçamento</button>
+  </form>
+  {% else %}
+  <p class="vazio">Todas as categorias de despesa já têm um orçamento. Você pode ajustar os limites acima.</p>
+  {% endif %}
+</section>
+{% endblock %}

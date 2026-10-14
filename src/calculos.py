@@ -8,6 +8,12 @@ CATEGORIAS = [
     "Alimentação", "Moradia", "Transporte", "Saúde", "Educação",
     "Lazer", "Compras", "Contas", "Salário", "Renda extra", "Outros",
 ]
+CATEGORIAS_DESPESA = tuple(c for c in CATEGORIAS if c not in ("Salário", "Renda extra"))
+FREQUENCIAS_RECORRENCIA = {
+    "semanal": "Toda semana",
+    "quinzenal": "A cada duas semanas",
+    "mensal": "Todo mês",
+}
 PRODUTOS_INVESTIMENTO = (
     "CDB", "LCI", "LCA", "Tesouro Selic", "Tesouro Prefixado",
     "Tesouro IPCA+", "Debênture", "Outro",
@@ -84,6 +90,41 @@ def validar_movimentacao(form):
         erros.append("Informe uma data válida.")
     dados = {"descricao": descricao, "valor": valor, "tipo": tipo,
              "categoria": categoria, "data": data}
+    return dados, erros
+
+
+def validar_orcamento(form):
+    """Valida um limite mensal por categoria."""
+    categoria = (form.get("categoria") or "").strip()
+    limite = converter_valor(form.get("limite"))
+    erros = []
+    if categoria not in CATEGORIAS_DESPESA:
+        erros.append("Escolha uma categoria de despesa válida.")
+    if limite is None or limite <= 0:
+        erros.append("Informe um limite mensal maior que zero.")
+    return {"categoria": categoria, "limite": limite}, erros
+
+
+def validar_recorrencia(form):
+    """Valida uma movimentação agendada para lançamento automático."""
+    dados, erros = validar_movimentacao({
+        **form,
+        "data": form.get("inicio"),
+    })
+    frequencia = (form.get("frequencia") or "").strip()
+    if frequencia not in FREQUENCIAS_RECORRENCIA:
+        erros.append("Escolha uma frequência válida.")
+    fim_txt = (form.get("data_fim") or "").strip()
+    try:
+        data_fim = datetime.strptime(fim_txt, "%Y-%m-%d").date() if fim_txt else None
+    except ValueError:
+        data_fim = None
+        erros.append("Informe uma data final válida.")
+    if data_fim and dados["data"] and data_fim < dados["data"]:
+        erros.append("A data final não pode ser anterior ao primeiro lançamento.")
+    dados["frequencia"] = frequencia
+    dados["inicio"] = dados.pop("data")
+    dados["data_fim"] = data_fim
     return dados, erros
 
 

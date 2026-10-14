@@ -1,7 +1,7 @@
 """Database access for Finora Budget, with MySQL and local SQLite support."""
 import os
 import sqlite3
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import mysql.connector
@@ -149,6 +149,41 @@ def init_db():
                 ) ENGINE=InnoDB
                 """
             )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS orcamentos (
+                    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    user_id INT UNSIGNED NOT NULL,
+                    categoria VARCHAR(40) NOT NULL,
+                    limite DECIMAL(12,2) NOT NULL,
+                    PRIMARY KEY (id),
+                    UNIQUE KEY uq_orcamento_usuario_categoria (user_id, categoria),
+                    CONSTRAINT chk_orcamento_limite CHECK (limite > 0),
+                    CONSTRAINT fk_orcamentos_usuario FOREIGN KEY (user_id) REFERENCES usuarios(id)
+                ) ENGINE=InnoDB
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS recorrencias (
+                    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    user_id INT UNSIGNED NOT NULL,
+                    descricao VARCHAR(120) NOT NULL,
+                    valor DECIMAL(12,2) NOT NULL,
+                    tipo ENUM('receita','despesa') NOT NULL,
+                    categoria VARCHAR(40) NOT NULL,
+                    frequencia VARCHAR(12) NOT NULL,
+                    dia_mes TINYINT UNSIGNED NOT NULL,
+                    proxima_data DATE NOT NULL,
+                    data_fim DATE NULL,
+                    ativa TINYINT(1) NOT NULL DEFAULT 1,
+                    PRIMARY KEY (id),
+                    INDEX idx_recorrencias_vencimento (user_id, ativa, proxima_data),
+                    CONSTRAINT chk_recorrencia_valor CHECK (valor > 0),
+                    CONSTRAINT fk_recorrencias_usuario FOREIGN KEY (user_id) REFERENCES usuarios(id)
+                ) ENGINE=InnoDB
+                """
+            )
 
             cur.execute("SHOW COLUMNS FROM usuarios LIKE 'nome'")
             if cur.fetchone() is None:
@@ -247,6 +282,34 @@ def init_db():
             )
             """
         )
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS orcamentos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES usuarios(id),
+                categoria TEXT NOT NULL,
+                limite REAL NOT NULL CHECK(limite > 0),
+                UNIQUE(user_id, categoria)
+            )
+            """
+        )
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS recorrencias (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES usuarios(id),
+                descricao TEXT NOT NULL,
+                valor REAL NOT NULL CHECK(valor > 0),
+                tipo TEXT NOT NULL CHECK(tipo IN ('receita', 'despesa')),
+                categoria TEXT NOT NULL,
+                frequencia TEXT NOT NULL CHECK(frequencia IN ('semanal', 'quinzenal', 'mensal')),
+                dia_mes INTEGER NOT NULL CHECK(dia_mes BETWEEN 1 AND 31),
+                proxima_data TEXT NOT NULL,
+                data_fim TEXT,
+                ativa INTEGER NOT NULL DEFAULT 1
+            )
+            """
+        )
         for table in ("movimentacoes", "metas"):
             columns = {row[1] for row in cur.execute(f"PRAGMA table_info({table})")}
             if "user_id" not in columns:
@@ -263,6 +326,10 @@ def init_db():
         cur.execute(
             "CREATE INDEX IF NOT EXISTS idx_resgates_usuario_data "
             "ON resgates_investimentos(user_id, data_resgate)"
+        )
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS idx_recorrencias_vencimento "
+            "ON recorrencias(user_id, ativa, proxima_data)"
         )
         con.commit()
     finally:
@@ -304,7 +371,7 @@ def _consultar(sql, params=(), um=False):
 
 
 def _normalizar_linha(linha):
-    for campo in ("data", "data_aplicacao", "vencimento"):
+    for campo in ("data", "data_aplicacao", "vencimento", "proxima_data", "data_fim"):
         if isinstance(linha.get(campo), str):
             linha[campo] = date.fromisoformat(linha[campo])
     return linha
@@ -437,6 +504,201 @@ def atualizar_movimentacao(user_id, id_, dados):
 def excluir_movimentacao(user_id, id_):
     p = _placeholder()
     _executar(f"DELETE FROM movimentacoes WHERE id = {p} AND user_id = {p}", (id_, user_id))
+
+
+# ---------- Orçamentos ----------
+def listar_orcamentos(user_id, mes):
+    inicio = datetime.strptime(mes, "%Y-%m").date().replace(day=1)
+    proximo_mes = date(
+        inicio.year + (inicio.month == 12),
+        1 if inicio.month == 12 else inicio.month + 1,
+        1,
+    )
+    p = _placeholder()
+    return _consultar(
+        "SELECT o.categoria, o.limite, COALESCE(SUM(m.valor), 0) AS gasto "
+        "FROM orcamentos o LEFT JOIN movimentacoes m "
+        f"ON m.user_id = o.user_id AND m.categoria = o.categoria AND m.tipo = 'despesa' "
+        f"AND m.`data` >= {p} AND m.`data` < {p} "
+        f"WHERE o.user_id = {p} GROUP BY o.id, o.categoria, o.limite ORDER BY o.categoria",
+        (inicio, proximo_mes, user_id),
+    )
+
+
+def salvar_orcamento(user_id, categoria, limite):
+    p = _placeholder()
+    if _mysql_disponivel():
+        sql = (
+            "INSERT INTO orcamentos (user_id, categoria, limite) "
+            f"VALUES ({p}, {p}, {p}) ON DUPLICATE KEY UPDATE limite = VALUES(limite)"
+        )
+    else:
+        sql = (
+            "INSERT INTO orcamentos (user_id, categoria, limite) "
+            f"VALUES ({p}, {p}, {p}) ON CONFLICT(user_id, categoria) "
+            "DO UPDATE SET limite = excluded.limite"
+        )
+    _executar(sql, (user_id, categoria, limite))
+
+
+def excluir_orcamento(user_id, categoria):
+    p = _placeholder()
+    _executar(
+        f"DELETE FROM orcamentos WHERE user_id = {p} AND categoria = {p}",
+        (user_id, categoria),
+    )
+
+
+# ---------- Movimentações recorrentes ----------
+def criar_recorrencia(user_id, dados):
+    p = _placeholder()
+    _executar(
+        "INSERT INTO recorrencias "
+        "(user_id, descricao, valor, tipo, categoria, frequencia, dia_mes, "
+        "proxima_data, data_fim, ativa) "
+        f"VALUES ({p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, 1)",
+        (
+            user_id,
+            dados["descricao"],
+            dados["valor"],
+            dados["tipo"],
+            dados["categoria"],
+            dados["frequencia"],
+            dados["inicio"].day,
+            dados["inicio"],
+            dados["data_fim"],
+        ),
+    )
+
+
+def listar_recorrencias(user_id):
+    p = _placeholder()
+    return _consultar(
+        "SELECT id, descricao, valor, tipo, categoria, frequencia, "
+        f"proxima_data, data_fim, ativa FROM recorrencias WHERE user_id = {p} "
+        "ORDER BY ativa DESC, proxima_data, id",
+        (user_id,),
+    )
+
+
+def alternar_recorrencia(user_id, id_):
+    p = _placeholder()
+    _executar(
+        f"UPDATE recorrencias SET ativa = CASE WHEN ativa = 1 THEN 0 ELSE 1 END "
+        f"WHERE user_id = {p} AND id = {p}",
+        (user_id, id_),
+    )
+
+
+def usuarios_com_recorrencias_vencidas(hoje):
+    p = _placeholder()
+    rows = _consultar(
+        "SELECT DISTINCT user_id FROM recorrencias "
+        f"WHERE ativa = 1 AND proxima_data <= {p}",
+        (hoje,),
+    )
+    return [row["user_id"] for row in rows]
+
+
+def _data_recorrencia_seguinte(atual, frequencia, dia_mes):
+    if frequencia == "semanal":
+        return atual + timedelta(days=7)
+    if frequencia == "quinzenal":
+        return atual + timedelta(days=14)
+    mes_absoluto = atual.year * 12 + atual.month
+    ano, mes_zero = divmod(mes_absoluto, 12)
+    mes = mes_zero + 1
+    ultimo_dia = (date(ano + (mes == 12), mes % 12 + 1, 1) - timedelta(days=1)).day
+    return date(ano, mes, min(dia_mes, ultimo_dia))
+
+
+def processar_recorrencias(user_id, hoje):
+    con = conectar()
+    try:
+        if isinstance(con, sqlite3.Connection):
+            con.row_factory = sqlite3.Row
+            con.execute("BEGIN IMMEDIATE")
+            cur = con.cursor()
+            parametros = _normalizar_parametros((user_id, hoje))
+            cur.execute(
+                "SELECT id, descricao, valor, tipo, categoria, frequencia, dia_mes, "
+                "proxima_data, data_fim FROM recorrencias "
+                "WHERE user_id = ? AND ativa = 1 AND proxima_data <= ? ORDER BY id",
+                parametros,
+            )
+        else:
+            cur = con.cursor(dictionary=True)
+            cur.execute(
+                "SELECT id, descricao, valor, tipo, categoria, frequencia, dia_mes, "
+                "proxima_data, data_fim FROM recorrencias "
+                "WHERE user_id = %s AND ativa = 1 AND proxima_data <= %s "
+                "ORDER BY id FOR UPDATE",
+                (user_id, hoje),
+            )
+        recorrencias = cur.fetchall()
+        geradas = 0
+        for recorrencia in recorrencias:
+            proxima = recorrencia["proxima_data"]
+            fim = recorrencia["data_fim"]
+            if isinstance(proxima, str):
+                proxima = date.fromisoformat(proxima)
+            if isinstance(fim, str):
+                fim = date.fromisoformat(fim)
+            ativa = True
+            while proxima <= hoje and (fim is None or proxima <= fim):
+                if isinstance(con, sqlite3.Connection):
+                    cur.execute(
+                        "INSERT INTO movimentacoes "
+                        "(descricao, valor, tipo, categoria, `data`, user_id) "
+                        "VALUES (?, ?, ?, ?, ?, ?)",
+                        _normalizar_parametros((
+                            recorrencia["descricao"], recorrencia["valor"],
+                            recorrencia["tipo"], recorrencia["categoria"], proxima, user_id,
+                        )),
+                    )
+                else:
+                    cur.execute(
+                        "INSERT INTO movimentacoes "
+                        "(descricao, valor, tipo, categoria, `data`, user_id) "
+                        "VALUES (%s, %s, %s, %s, %s, %s)",
+                        (
+                            recorrencia["descricao"], recorrencia["valor"],
+                            recorrencia["tipo"], recorrencia["categoria"], proxima, user_id,
+                        ),
+                    )
+                geradas += 1
+                try:
+                    proxima = _data_recorrencia_seguinte(
+                        proxima, recorrencia["frequencia"], recorrencia["dia_mes"]
+                    )
+                except (OverflowError, ValueError):
+                    ativa = False
+                    break
+            if isinstance(con, sqlite3.Connection):
+                cur.execute(
+                    "UPDATE recorrencias SET proxima_data = ?, ativa = ? "
+                    "WHERE id = ? AND user_id = ?",
+                    _normalizar_parametros((
+                        proxima, int(ativa and (fim is None or proxima <= fim)),
+                        recorrencia["id"], user_id,
+                    )),
+                )
+            else:
+                cur.execute(
+                    "UPDATE recorrencias SET proxima_data = %s, ativa = %s "
+                    "WHERE id = %s AND user_id = %s",
+                    (
+                        proxima, int(ativa and (fim is None or proxima <= fim)),
+                        recorrencia["id"], user_id,
+                    ),
+                )
+        con.commit()
+        return geradas
+    except Exception:
+        con.rollback()
+        raise
+    finally:
+        con.close()
 
 
 def totais(user_id, mes=None):
