@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Finora Budget{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav class="menu" aria-label="Principal">
+    <a class="marca" href="{{ url_for('dashboard') }}"><span class="marca-sinal"></span>Finora</a>
+    {% set rota = request.endpoint or '' %}
+    <a href="{{ url_for('dashboard') }}" class="{{ 'ativo' if rota == 'dashboard' }}">Dashboard</a>
+    <a href="{{ url_for('movimentacoes') }}" class="{{ 'ativo' if 'movimentac' in rota }}">Movimentações</a>
+    <a href="{{ url_for('relatorios') }}" class="{{ 'ativo' if rota == 'relatorios' }}">Relatórios</a>
+    <a href="{{ url_for('metas') }}" class="{{ 'ativo' if 'meta' in rota }}">Metas</a>
+  </nav>
+  <main>
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in msgs %}<div class="aviso aviso-{{ cat }}" role="status">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    {% if erros %}
+      <div class="aviso aviso-erro" role="alert"><ul>{% for e in erros %}<li>{{ e }}</li>{% endfor %}</ul></div>
+    {% endif %}
+    {% block conteudo %}{% endblock %}
+  </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

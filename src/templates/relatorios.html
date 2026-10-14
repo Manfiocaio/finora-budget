@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titulo %}Relatórios · Finora{% endblock %}
+{% block conteudo %}
+<h1>Relatórios</h1>
+<form method="get" class="filtros">
+  <label>Mês <input type="month" name="mes" value="{{ mes }}" required></label>
+  <button class="btn btn-sec" type="submit">Ver relatório</button>
+</form>
+<section class="indicadores">
+  <article class="card"><span class="rotulo">Receitas do mês</span><strong class="numero receita">{{ receitas|brl }}</strong></article>
+  <article class="card"><span class="rotulo">Despesas do mês</span><strong class="numero despesa">{{ despesas|brl }}</strong></article>
+  <article class="card"><span class="rotulo">Resultado</span><strong class="numero {{ 'despesa' if saldo < 0 }}">{{ saldo|brl }}</strong></article>
+</section>
+<section class="duas-colunas">
+  <article class="card">
+    <h2>Receitas × despesas</h2>
+    {% if receitas or despesas %}
+    <div class="comparar">
+      <div><span>Receitas</span><div class="trilho"><i class="barra-receita" style="width: {{ pct_receitas }}%"></i></div></div>
+      <div><span>Despesas</span><div class="trilho"><i class="barra-despesa" style="width: {{ pct_despesas }}%"></i></div></div>
+    </div>
+    {% else %}<p class="vazio">Sem movimentações neste mês.</p>{% endif %}
+  </article>
+  <article class="card">
+    <h2>Gastos por categoria</h2>
+    <div class="grafico" data-dados='{{ grafico }}'></div>
+    <p class="vazio" hidden>Sem despesas neste mês.</p>
+  </article>
+</section>
+{% endblock %}

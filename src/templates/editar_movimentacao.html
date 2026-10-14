@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titulo %}Editar movimentação · Finora{% endblock %}
+{% block conteudo %}
+<h1>Editar movimentação</h1>
+<section class="card">
+  {% with acao=url_for('editar_movimentacao', id_=id_), rotulo='Salvar alterações' %}{% include "_form_mov.html" %}{% endwith %}
+  <p><a href="{{ url_for('movimentacoes') }}">Cancelar</a></p>
+</section>
+{% endblock %}

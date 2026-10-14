@@ -1,0 +1,23 @@
+<form method="post" action="{{ acao }}" class="form-grade">
+  <label>Descrição
+    <input name="descricao" maxlength="120" required value="{{ form.get('descricao', '') }}" placeholder="Ex.: Mercado">
+  </label>
+  <label>Valor (R$)
+    <input name="valor" inputmode="decimal" required value="{{ form.get('valor', '') }}" placeholder="0,00">
+  </label>
+  <label>Tipo
+    <select name="tipo" required>
+      <option value="despesa" {{ 'selected' if form.get('tipo', 'despesa') == 'despesa' }}>Despesa</option>
+      <option value="receita" {{ 'selected' if form.get('tipo') == 'receita' }}>Receita</option>
+    </select>
+  </label>
+  <label>Categoria
+    <select name="categoria" required>
+      {% for c in categorias %}<option {{ 'selected' if form.get('categoria') == c }}>{{ c }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Data
+    <input type="date" name="data" required value="{{ form.get('data') or hoje }}">
+  </label>
+  <button class="btn" type="submit">{{ rotulo }}</button>
+</form>

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block titulo %}Movimentações · Finora{% endblock %}
+{% block conteudo %}
+<h1>Movimentações</h1>
+<section class="card">
+  <h2>Nova movimentação</h2>
+  {% with acao=url_for('nova_movimentacao'), rotulo='Salvar' %}{% include "_form_mov.html" %}{% endwith %}
+</section>
+<section class="card">
+  <form method="get" class="filtros">
+    <label>Mês <input type="month" name="mes" value="{{ mes }}"></label>
+    <label>Tipo
+      <select name="tipo">
+        <option value="">Todos</option>
+        <option value="receita" {{ 'selected' if tipo == 'receita' }}>Receitas</option>
+        <option value="despesa" {{ 'selected' if tipo == 'despesa' }}>Despesas</option>
+      </select>
+    </label>
+    <button class="btn btn-sec" type="submit">Filtrar</button>
+    <a class="btn btn-sec" href="{{ url_for('movimentacoes') }}">Limpar</a>
+  </form>
+  {% if lista %}
+  <div class="tabela-rolagem">
+    <table>
+      <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="dir">Valor</th><th></th></tr></thead>
+      <tbody>
+      {% for m in lista %}
+        <tr>
+          <td>{{ m.data|data_br }}</td><td>{{ m.descricao }}</td><td>{{ m.categoria }}</td>
+          <td class="dir {{ m.tipo }}">{{ '+' if m.tipo == 'receita' else '-' }}{{ m.valor|brl }}</td>
+          <td class="acoes">
+            <a class="btn btn-sec btn-p" href="{{ url_for('editar_movimentacao', id_=m.id) }}">Editar</a>
+            <form method="post" action="{{ url_for('excluir_movimentacao', id_=m.id) }}" data-confirmar="Excluir esta movimentação?">
+              <button class="btn btn-perigo btn-p" type="submit">Excluir</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="vazio">Nenhuma movimentação encontrada.</p>
+  {% endif %}
+</section>
+{% endblock %}

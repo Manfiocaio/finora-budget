@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titulo %}Metas · Finora{% endblock %}
+{% block conteudo %}
+<h1>Metas financeiras</h1>
+<section class="card">
+  <h2>Nova meta</h2>
+  {% with acao=url_for('nova_meta'), rotulo='Criar meta' %}{% include "_form_meta.html" %}{% endwith %}
+</section>
+{% if lista %}
+<section class="metas">
+  {% for m in lista %}
+  <article class="card">
+    <header class="meta-topo"><h2>{{ m.nome }}</h2><strong>{{ m.pct }}%</strong></header>
+    <div class="trilho" role="progressbar" aria-valuenow="{{ m.barra }}" aria-valuemin="0" aria-valuemax="100">
+      <i class="barra-meta" style="width: {{ m.barra }}%"></i>
+    </div>
+    <p class="meta-valores">{{ m.valor_acumulado|brl }} de {{ m.valor_objetivo|brl }}</p>
+    <form method="post" action="{{ url_for('depositar_meta', id_=m.id) }}" class="depositar">
+      <input name="valor" inputmode="decimal" placeholder="Guardar R$" aria-label="Valor a guardar" required>
+      <button class="btn btn-sec btn-p" type="submit">Adicionar</button>
+    </form>
+    <div class="acoes">
+      <a class="btn btn-sec btn-p" href="{{ url_for('editar_meta', id_=m.id) }}">Editar</a>
+      <form method="post" action="{{ url_for('excluir_meta', id_=m.id) }}" data-confirmar="Excluir a meta '{{ m.nome }}'?">
+        <button class="btn btn-perigo btn-p" type="submit">Excluir</button>
+      </form>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{% else %}
+<p class="vazio">Você ainda não criou nenhuma meta.</p>
+{% endif %}
+{% endblock %}

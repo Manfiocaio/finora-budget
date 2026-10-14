@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titulo %}Dashboard · Finora{% endblock %}
+{% block conteudo %}
+<h1>Dashboard</h1>
+<section class="indicadores">
+  <article class="card saldo {{ 'negativo' if saldo < 0 }}">
+    <span class="rotulo">Saldo atual</span>
+    <strong class="numero">{{ saldo|brl }}</strong>
+  </article>
+  <article class="card"><span class="rotulo">Receitas</span><strong class="numero receita">{{ receitas|brl }}</strong></article>
+  <article class="card"><span class="rotulo">Despesas</span><strong class="numero despesa">{{ despesas|brl }}</strong></article>
+</section>
+<section class="duas-colunas">
+  <article class="card">
+    <h2>Despesas por categoria</h2>
+    <div class="grafico" data-dados='{{ grafico }}'></div>
+    <p class="vazio" hidden>Nenhuma despesa cadastrada ainda.</p>
+  </article>
+  <article class="card">
+    <h2>Movimentações recentes</h2>
+    {% if recentes %}
+    <ul class="recentes">
+      {% for m in recentes %}
+      <li>
+        <span><b>{{ m.descricao }}</b><small>{{ m.categoria }} · {{ m.data|data_br }}</small></span>
+        <span class="{{ m.tipo }}">{{ '+' if m.tipo == 'receita' else '-' }}{{ m.valor|brl }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="vazio">Nenhuma movimentação ainda. <a href="{{ url_for('movimentacoes') }}">Cadastre a primeira</a>.</p>
+    {% endif %}
+  </article>
+</section>
+{% endblock %}
