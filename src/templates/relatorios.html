@@ -1,11 +1,19 @@
 {% extends "base.html" %}
 {% block titulo %}Relatórios · Finora{% endblock %}
 {% block conteudo %}
-<h1>Relatórios</h1>
-<form method="get" class="filtros">
-  <label>Mês <input type="month" name="mes" value="{{ mes }}" required></label>
-  <button class="btn btn-sec" type="submit">Ver relatório</button>
-</form>
+<header class="cabecalho-pagina">
+  <div>
+    <span class="sobre-titulo">Decisões com mais clareza</span>
+    <h1>Relatórios</h1>
+    <p>Compare suas entradas e saídas e entenda para onde vai seu dinheiro.</p>
+  </div>
+</header>
+<section class="card filtros-card">
+  <form method="get" class="filtros">
+    <label>Mês de referência <input type="month" name="mes" value="{{ mes }}" required></label>
+    <button class="btn" type="submit">Atualizar relatório</button>
+  </form>
+</section>
 <section class="indicadores">
   <article class="card"><span class="rotulo">Receitas do mês</span><strong class="numero receita">{{ receitas|brl }}</strong></article>
   <article class="card"><span class="rotulo">Despesas do mês</span><strong class="numero despesa">{{ despesas|brl }}</strong></article>

@@ -1,9 +1,15 @@
 {% extends "base.html" %}
 {% block titulo %}Editar movimentação · Finora{% endblock %}
 {% block conteudo %}
-<h1>Editar movimentação</h1>
+<header class="cabecalho-pagina">
+  <div>
+    <span class="sobre-titulo">Atualize seus registros</span>
+    <h1>Editar movimentação</h1>
+    <p>Altere os dados desta entrada ou despesa.</p>
+  </div>
+</header>
 <section class="card">
   {% with acao=url_for('editar_movimentacao', id_=id_), rotulo='Salvar alterações' %}{% include "_form_mov.html" %}{% endwith %}
-  <p><a href="{{ url_for('movimentacoes') }}">Cancelar</a></p>
+  <p><a class="link-voltar" href="{{ url_for('movimentacoes') }}">Cancelar e voltar ao histórico</a></p>
 </section>
 {% endblock %}

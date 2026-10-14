@@ -1,9 +1,15 @@
 {% extends "base.html" %}
 {% block titulo %}Editar meta · Finora{% endblock %}
 {% block conteudo %}
-<h1>Editar meta</h1>
+<header class="cabecalho-pagina">
+  <div>
+    <span class="sobre-titulo">Seus objetivos</span>
+    <h1>Editar meta</h1>
+    <p>Atualize os detalhes do seu objetivo financeiro.</p>
+  </div>
+</header>
 <section class="card">
   {% with acao=url_for('editar_meta', id_=id_), rotulo='Salvar alterações' %}{% include "_form_meta.html" %}{% endwith %}
-  <p><a href="{{ url_for('metas') }}">Cancelar</a></p>
+  <p><a class="link-voltar" href="{{ url_for('metas') }}">Cancelar e voltar às metas</a></p>
 </section>
 {% endblock %}

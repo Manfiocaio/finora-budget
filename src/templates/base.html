@@ -3,19 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17155e">
   <title>{% block titulo %}Finora Budget{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <nav class="menu" aria-label="Principal">
-    <a class="marca" href="{{ url_for('dashboard') }}"><span class="marca-sinal"></span>Finora</a>
+    <a class="marca" href="{{ url_for('dashboard') }}">
+      <span class="marca-sinal" aria-hidden="true"><span></span></span>
+      <span class="marca-texto">finora<small>FINANÇAS PESSOAIS</small></span>
+    </a>
+    <span class="menu-legenda">MENU PRINCIPAL</span>
     {% set rota = request.endpoint or '' %}
-    <a href="{{ url_for('dashboard') }}" class="{{ 'ativo' if rota == 'dashboard' }}">Dashboard</a>
-    <a href="{{ url_for('movimentacoes') }}" class="{{ 'ativo' if 'movimentac' in rota }}">Movimentações</a>
-    <a href="{{ url_for('relatorios') }}" class="{{ 'ativo' if rota == 'relatorios' }}">Relatórios</a>
-    <a href="{{ url_for('metas') }}" class="{{ 'ativo' if 'meta' in rota }}">Metas</a>
+    <a href="{{ url_for('dashboard') }}" class="{{ 'ativo' if rota == 'dashboard' }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="4" rx="1.5"/><rect x="13.5" y="10.5" width="7" height="10" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
+      <span>Visão geral</span>
+    </a>
+    <a href="{{ url_for('movimentacoes') }}" class="{{ 'ativo' if 'movimentac' in rota }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/><circle cx="12" cy="12" r="9"/></svg>
+      <span>Movimentações</span>
+    </a>
+    <a href="{{ url_for('relatorios') }}" class="{{ 'ativo' if rota == 'relatorios' }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5V11m5 8.5V5m5 14.5v-6m5 6V8"/><path d="M2.5 20.5h19"/></svg>
+      <span>Relatórios</span>
+    </a>
+    <a href="{{ url_for('metas') }}" class="{{ 'ativo' if 'meta' in rota }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+      <span>Metas</span>
+    </a>
+    <div class="menu-rodape">
+      <span class="avatar-usuario" aria-hidden="true">F</span>
+      <span><strong>Meu espaço</strong><small>Controle pessoal</small></span>
+    </div>
   </nav>
   <main>
+    <div class="conteudo">
     {% with msgs = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in msgs %}<div class="aviso aviso-{{ cat }}" role="status">{{ msg }}</div>{% endfor %}
     {% endwith %}
@@ -23,6 +45,8 @@
       <div class="aviso aviso-erro" role="alert"><ul>{% for e in erros %}<li>{{ e }}</li>{% endfor %}</ul></div>
     {% endif %}
     {% block conteudo %}{% endblock %}
+    <footer class="rodape-pagina">Finora <span>·</span> Seu dinheiro, com mais clareza.</footer>
+    </div>
   </main>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>

@@ -1,9 +1,15 @@
 {% extends "base.html" %}
 {% block titulo %}Metas · Finora{% endblock %}
 {% block conteudo %}
-<h1>Metas financeiras</h1>
+<header class="cabecalho-pagina">
+  <div>
+    <span class="sobre-titulo">Planeje o que vem pela frente</span>
+    <h1>Metas financeiras</h1>
+    <p>Transforme seus planos em objetivos e acompanhe cada conquista.</p>
+  </div>
+</header>
 <section class="card">
-  <h2>Nova meta</h2>
+  <div class="card-titulo"><div><h2>Criar uma meta</h2><p>Defina um objetivo e acompanhe o quanto falta para alcançá-lo.</p></div></div>
   {% with acao=url_for('nova_meta'), rotulo='Criar meta' %}{% include "_form_meta.html" %}{% endwith %}
 </section>
 {% if lista %}
@@ -29,6 +35,6 @@
   {% endfor %}
 </section>
 {% else %}
-<p class="vazio">Você ainda não criou nenhuma meta.</p>
+<section class="card vazio-card"><p class="vazio">Você ainda não criou nenhuma meta. Comece definindo um objetivo acima.</p></section>
 {% endif %}
 {% endblock %}

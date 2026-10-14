@@ -1,12 +1,19 @@
 {% extends "base.html" %}
 {% block titulo %}Movimentações · Finora{% endblock %}
 {% block conteudo %}
-<h1>Movimentações</h1>
+<header class="cabecalho-pagina">
+  <div>
+    <span class="sobre-titulo">Acompanhe seu dinheiro</span>
+    <h1>Movimentações</h1>
+    <p>Registre e organize suas entradas e saídas financeiras.</p>
+  </div>
+</header>
 <section class="card">
-  <h2>Nova movimentação</h2>
+  <div class="card-titulo"><div><h2>Adicionar movimentação</h2><p>Preencha os dados para registrar uma entrada ou despesa.</p></div></div>
   {% with acao=url_for('nova_movimentacao'), rotulo='Salvar' %}{% include "_form_mov.html" %}{% endwith %}
 </section>
 <section class="card">
+  <div class="card-titulo"><div><h2>Histórico</h2><p>Consulte, filtre ou edite os registros realizados.</p></div></div>
   <form method="get" class="filtros">
     <label>Mês <input type="month" name="mes" value="{{ mes }}"></label>
     <label>Tipo
@@ -40,7 +47,7 @@
     </table>
   </div>
   {% else %}
-  <p class="vazio">Nenhuma movimentação encontrada.</p>
+  <p class="vazio">Nenhuma movimentação encontrada. Ajuste os filtros ou cadastre uma nova.</p>
   {% endif %}
 </section>
 {% endblock %}

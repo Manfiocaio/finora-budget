@@ -1,6 +1,6 @@
 // Gráfico de rosca em SVG puro + confirmação de exclusão.
-const CORES = ["#0e6b57", "#d99a1e", "#bf4126", "#3f6fa8", "#7a5c9e", "#5e9c76",
-               "#c97a9b", "#8a8f3a", "#6b7c85", "#b5651d", "#2e8b9a"];
+const CORES = ["#1818b7", "#17155e", "#2525ff", "#15803d", "#af7038", "#6768a0",
+               "#b91c1c", "#4655ff", "#5b3819", "#737373", "#1d1ae8"];
 const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const NS = "http://www.w3.org/2000/svg";
 
