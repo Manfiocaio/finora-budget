@@ -6,8 +6,19 @@
   <label>Valor desejado (R$)
     <input name="valor_objetivo" inputmode="decimal" required value="{{ form.get('valor_objetivo', '') }}" placeholder="0,00">
   </label>
-  <label>Já economizado (R$)
-    <input name="valor_acumulado" inputmode="decimal" value="{{ form.get('valor_acumulado', '') }}" placeholder="0,00">
+  {% if permitir_vinculo_saldo %}
+  <label class="check-saldo">
+    <span><input type="checkbox" name="acompanhar_saldo" value="on"
+      {% if form.get('acompanhar_saldo') %}checked{% endif %}
+      {% if not pode_vincular_saldo and not form.get('acompanhar_saldo') %}disabled{% endif %}>
+      Acompanhar saldo disponível</span>
+    <small>Atualiza esta meta automaticamente com seu saldo após despesas e investimentos ({{ saldo_disponivel|brl }}).</small>
+    {% if not pode_vincular_saldo and not form.get('acompanhar_saldo') %}<small>Outra meta já está vinculada ao saldo.</small>{% endif %}
+  </label>
+  {% endif %}
+  <label class="campo-acumulado">Já economizado (R$)
+    <input name="valor_acumulado" inputmode="decimal" value="{{ form.get('valor_acumulado', '') }}"
+      placeholder="0,00" {% if form.get('acompanhar_saldo') %}readonly{% endif %}>
   </label>
   <button class="btn" type="submit">{{ rotulo }}</button>
 </form>

@@ -13,7 +13,12 @@
     <input id="email" type="email" name="email" autocomplete="email" maxlength="254" required autofocus value="{{ request.form.get('email', '') }}" placeholder="voce@exemplo.com">
   </label>
   <label for="senha">Senha
-    <input id="senha" type="password" name="senha" autocomplete="current-password" maxlength="128" required placeholder="Sua senha">
+    <span class="senha-controle">
+      <input id="senha" type="password" name="senha" autocomplete="current-password" maxlength="128" required placeholder="Sua senha">
+      <button class="senha-visibilidade" type="button" aria-label="Mostrar senha" aria-pressed="false" data-toggle-senha="senha">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+      </button>
+    </span>
   </label>
   <button class="btn auth-submit" type="submit">Entrar</button>
 </form>

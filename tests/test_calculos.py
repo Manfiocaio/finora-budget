@@ -5,7 +5,8 @@ from decimal import Decimal
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from calculos import (calcular_saldo, converter_valor, formatar_brl, mes_valido,
-                      percentual_meta, validar_meta, validar_movimentacao)
+                      percentual_meta, validar_investimento, validar_meta,
+                      validar_movimentacao)
 
 
 def mov(**kw):
@@ -76,3 +77,35 @@ def test_meta_invalida():
     assert validar_meta({"nome": "", "valor_objetivo": "100"})[1]
     assert validar_meta({"nome": "X", "valor_objetivo": "0"})[1]
     assert validar_meta({"nome": "X", "valor_objetivo": "100", "valor_acumulado": "-1"})[1]
+
+
+def test_meta_vinculada_ignora_valor_manual():
+    dados, erros = validar_meta({
+        "nome": "Reserva", "valor_objetivo": "5000",
+        "valor_acumulado": "inválido", "acompanhar_saldo": "on",
+    })
+    assert erros == []
+    assert dados["acompanhar_saldo"] is True
+    assert dados["valor_acumulado"] == Decimal("0.00")
+
+
+def test_investimento_valido_e_invalido():
+    base = {
+        "produto": "CDB",
+        "instituicao": "Banco Finora",
+        "valor": "1.234,50",
+        "indexador": "CDI",
+        "taxa_anual": "2,5",
+        "data_aplicacao": "2026-10-14",
+        "vencimento": "2027-10-14",
+    }
+    dados, erros = validar_investimento(base)
+    assert erros == []
+    assert dados["valor"] == Decimal("1234.50")
+    assert dados["taxa_anual"] == Decimal("2.50")
+    assert dados["vencimento"].isoformat() == "2027-10-14"
+
+    _, erros = validar_investimento({**base, "valor": "0", "indexador": "Desconhecido"})
+    assert len(erros) >= 2
+    _, erros = validar_investimento({**base, "data_aplicacao": "2027-01-01", "vencimento": "2026-01-01"})
+    assert any("anterior à aplicação" in erro for erro in erros)

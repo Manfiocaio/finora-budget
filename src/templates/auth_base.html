@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#17155e">
   <title>{% block titulo %}Acessar · Finora{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('favicon') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="auth-body">
   <main class="auth-shell">
     <aside class="auth-brand">
       <a class="marca" href="{{ url_for('login') }}">
-        <span class="marca-sinal" aria-hidden="true"><span></span></span>
         <span class="marca-texto">finora<small>FINANÇAS PESSOAIS</small></span>
       </a>
       <div class="auth-brand-copy">

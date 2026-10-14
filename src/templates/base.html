@@ -5,17 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#17155e">
   <title>{% block titulo %}Finora Budget{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('favicon') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <header class="mobile-header">
     <a class="mobile-marca" href="{{ url_for('dashboard') }}" aria-label="Finora, início">
-      <span class="marca-sinal" aria-hidden="true"><span></span></span>
       <span>finora</span>
     </a>
     <div class="mobile-account">
-      <span class="mobile-avatar" aria-hidden="true">{{ (usuario_atual.nome or usuario_atual.email)[0]|upper }}</span>
-      <span class="mobile-account-name">{{ usuario_atual.nome }}</span>
+      <a class="mobile-profile-link" href="{{ url_for('perfil') }}" aria-label="Meu perfil">
+        {% if usuario_atual.foto_perfil %}
+        <img class="mobile-avatar" src="{{ url_for('foto_perfil') }}" alt="">
+        {% else %}
+        <span class="mobile-avatar" aria-hidden="true">{{ (usuario_atual.nome or usuario_atual.email)[0]|upper }}</span>
+        {% endif %}
+        <span class="mobile-account-name">{{ usuario_atual.nome }}</span>
+      </a>
       <form method="post" action="{{ url_for('logout') }}">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
         <button type="submit" class="mobile-logout" aria-label="Sair da conta" title="Sair da conta">
@@ -26,7 +32,6 @@
   </header>
   <nav class="menu" aria-label="Principal">
     <a class="marca" href="{{ url_for('dashboard') }}">
-      <span class="marca-sinal" aria-hidden="true"><span></span></span>
       <span class="marca-texto">finora<small>FINANÇAS PESSOAIS</small></span>
     </a>
     <span class="menu-legenda">MENU PRINCIPAL</span>
@@ -47,9 +52,19 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
       <span>Metas</span>
     </a>
+    <a href="{{ url_for('investimentos') }}" class="{{ 'ativo' if 'investimento' in rota }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M5 16V9m5 7V5m5 11v-4m5 4V7"/><path d="m4 6 5-3 5 5 6-4"/></svg>
+      <span>Investimentos</span>
+    </a>
     <div class="menu-rodape">
-      <span class="avatar-usuario" aria-hidden="true">{{ (usuario_atual.nome or usuario_atual.email)[0]|upper }}</span>
-      <span class="usuario-info"><strong>{{ usuario_atual.nome }}</strong><small>Conta pessoal</small></span>
+      <a class="perfil-sidebar" href="{{ url_for('perfil') }}" aria-label="Abrir meu perfil">
+        {% if usuario_atual.foto_perfil %}
+        <img class="avatar-usuario" src="{{ url_for('foto_perfil') }}" alt="">
+        {% else %}
+        <span class="avatar-usuario" aria-hidden="true">{{ (usuario_atual.nome or usuario_atual.email)[0]|upper }}</span>
+        {% endif %}
+        <span class="usuario-info"><strong>{{ usuario_atual.nome }}</strong><small>Meu perfil · Conta pessoal</small></span>
+      </a>
       <form method="post" action="{{ url_for('logout') }}" class="logout-form">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
         <button type="submit" class="logout-btn" aria-label="Sair da conta" title="Sair da conta">
@@ -87,6 +102,10 @@
     <a href="{{ url_for('metas') }}" class="{{ 'ativo' if 'meta' in rota }}" {% if 'meta' in rota %}aria-current="page"{% endif %}>
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
       <span>Metas</span>
+    </a>
+    <a href="{{ url_for('investimentos') }}" class="{{ 'ativo' if 'investimento' in rota }}" {% if 'investimento' in rota %}aria-current="page"{% endif %}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M5 16V9m5 7V5m5 11v-4m5 4V7"/><path d="m4 6 5-3 5 5 6-4"/></svg>
+      <span>Investir</span>
     </a>
   </nav>
   <script src="{{ url_for('static', filename='app.js') }}"></script>

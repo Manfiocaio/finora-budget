@@ -13,7 +13,7 @@
   <article class="card saldo {{ 'negativo' if saldo < 0 }}">
     <span class="rotulo">Saldo atual</span>
     <strong class="numero">{{ saldo|brl }}</strong>
-    <span class="saldo-legenda">Receitas menos despesas</span>
+    <span class="saldo-legenda">Após despesas e aplicações financeiras</span>
   </article>
   <article class="card metric-card">
     <span class="metric-icone receita-icone" aria-hidden="true">↗</span>
@@ -26,6 +26,12 @@
     <span class="rotulo">Despesas totais</span>
     <strong class="numero despesa">{{ despesas|brl }}</strong>
     <span class="metric-legenda">Saídas registradas</span>
+  </article>
+  <article class="card metric-card">
+    <span class="metric-icone investimento-icone" aria-hidden="true">↗</span>
+    <span class="rotulo">Em renda fixa</span>
+    <strong class="numero">{{ investido|brl }}</strong>
+    <span class="metric-legenda"><a href="{{ url_for('investimentos') }}">Ver carteira</a></span>
   </article>
 </section>
 <section class="duas-colunas">

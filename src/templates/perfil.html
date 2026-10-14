@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block titulo %}Meu perfil · Finora{% endblock %}
+{% block conteudo %}
+<header class="cabecalho-pagina">
+  <div>
+    <span class="sobre-titulo">Seu espaço, do seu jeito</span>
+    <h1>Meu perfil</h1>
+    <p>Atualize como você aparece e confira um resumo da sua vida financeira.</p>
+  </div>
+</header>
+<section class="perfil-resumo">
+  <article class="card perfil-identidade">
+    <div class="perfil-avatar-area">
+    {% if foto_perfil %}
+    <img class="perfil-foto-grande" data-avatar-photo src="{{ url_for('foto_perfil') }}" alt="Foto de perfil de {{ nome }}">
+    {% else %}
+    <img class="perfil-foto-grande" data-avatar-photo alt="Prévia da foto de perfil" hidden>
+    <span class="perfil-foto-grande perfil-inicial" data-avatar-inicial aria-hidden="true">{{ (nome or usuario.email)[0]|upper }}</span>
+    {% endif %}
+      <button class="perfil-foto-editar" type="button" data-escolher-foto aria-label="Alterar foto de perfil" title="Alterar foto de perfil">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l4.2-.9L19 8.3a2.1 2.1 0 0 0-3-3L5.2 16.1 4 20Z"/><path d="M13 6 18 11"/></svg>
+      </button>
+    </div>
+    <div>
+      <span class="sobre-titulo">SUA CONTA FINORA</span>
+      <h2>{{ nome }}</h2>
+      <p>{{ usuario.email }}</p>
+    </div>
+  </article>
+  <div class="perfil-metricas">
+    <article class="card"><span class="rotulo">Movimentações registradas</span><strong class="numero">{{ movimentacoes }}</strong><span class="metric-legenda">Seu histórico financeiro</span></article>
+    <article class="card"><span class="rotulo">Metas criadas</span><strong class="numero">{{ metas }}</strong><span class="metric-legenda">Objetivos acompanhados</span></article>
+    <article class="card"><span class="rotulo">Carteira de renda fixa</span><strong class="numero">{{ investido|brl }}</strong><span class="metric-legenda">Principal ainda investido</span></article>
+    <article class="card"><span class="rotulo">Saldo disponível</span><strong class="numero {{ 'despesa' if saldo < 0 }}">{{ saldo|brl }}</strong><span class="metric-legenda">Após despesas e aplicações</span></article>
+  </div>
+</section>
+<section class="card perfil-edicao">
+  <div class="card-titulo"><div><h2>Personalizar perfil</h2><p>Seu nome e sua foto aparecem na navegação da sua conta.</p></div></div>
+  <form id="form-perfil" method="post" enctype="multipart/form-data" class="form-perfil">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <label for="nome">Como devemos chamar você?
+      <input id="nome" name="nome" maxlength="80" required value="{{ nome }}">
+    </label>
+    <input id="foto" name="foto" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+    <p class="perfil-erro-foto" data-perfil-erro role="alert" hidden></p>
+    <p class="perfil-dica-foto">Use o lápis na foto para escolher uma imagem. Ao confirmar o enquadramento, ela será salva automaticamente.</p>
+    {% if foto_perfil %}
+    <label class="perfil-remover">
+      <input type="checkbox" name="remover_foto" value="1">
+      Remover a foto atual
+    </label>
+    {% endif %}
+    <button class="btn" type="submit">Salvar perfil</button>
+    <dialog class="modal-recorte-foto" data-modal-recorte aria-labelledby="titulo-recorte-foto">
+      <div class="recorte-cabecalho">
+        <span class="recorte-icone" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        </span>
+        <div><h2 id="titulo-recorte-foto">Sua foto, do seu jeito</h2><p>Arraste para posicionar e ajuste o zoom para enquadrar.</p></div>
+        <button class="recorte-fechar" type="button" data-cancelar-recorte aria-label="Fechar ajuste de foto">×</button>
+      </div>
+      <div class="recorte-palco" data-palco-recorte>
+        <img data-imagem-recorte alt="Enquadramento da foto de perfil" draggable="false">
+        <div class="recorte-grade" aria-hidden="true"><i></i><i></i></div>
+      </div>
+      <label class="recorte-zoom" for="zoom-foto"><span>Zoom</span><input id="zoom-foto" type="range" min="1" max="3" step="0.01" value="1"><span aria-hidden="true">＋</span></label>
+      <p class="recorte-ajuda">A grade ajuda a centralizar o enquadramento quadrado.</p>
+      <div class="recorte-acoes">
+        <button class="btn btn-sec" type="button" data-cancelar-recorte>Cancelar</button>
+        <button class="btn" type="button" data-aplicar-recorte>Salvar foto</button>
+      </div>
+    </dialog>
+  </form>
+</section>
+{% endblock %}

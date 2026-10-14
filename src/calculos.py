@@ -8,6 +8,11 @@ CATEGORIAS = [
     "Alimentação", "Moradia", "Transporte", "Saúde", "Educação",
     "Lazer", "Compras", "Contas", "Salário", "Renda extra", "Outros",
 ]
+PRODUTOS_INVESTIMENTO = (
+    "CDB", "LCI", "LCA", "Tesouro Selic", "Tesouro Prefixado",
+    "Tesouro IPCA+", "Debênture", "Outro",
+)
+INDEXADORES_INVESTIMENTO = ("Prefixado", "CDI", "Selic", "IPCA", "Outro")
 VALOR_MAXIMO = Decimal("9999999999.99")  # limite do DECIMAL(12,2)
 
 
@@ -87,8 +92,9 @@ def validar_meta(form):
     erros = []
     nome = (form.get("nome") or "").strip()
     objetivo = converter_valor(form.get("valor_objetivo"))
+    acompanhar_saldo = form.get("acompanhar_saldo") in ("1", "on", "true")
     acum_txt = (form.get("valor_acumulado") or "").strip()
-    acumulado = Decimal("0.00") if acum_txt == "" else converter_valor(acum_txt)
+    acumulado = Decimal("0.00") if acompanhar_saldo or acum_txt == "" else converter_valor(acum_txt)
 
     if not nome:
         erros.append("Informe o nome da meta.")
@@ -98,4 +104,55 @@ def validar_meta(form):
         erros.append("Informe um valor desejado maior que zero.")
     if acumulado is None or acumulado < 0:
         erros.append("O valor economizado não pode ser negativo.")
-    return {"nome": nome, "valor_objetivo": objetivo, "valor_acumulado": acumulado}, erros
+    return {
+        "nome": nome,
+        "valor_objetivo": objetivo,
+        "valor_acumulado": acumulado,
+        "acompanhar_saldo": acompanhar_saldo,
+    }, erros
+
+
+def validar_investimento(form):
+    """Valida os dados de um investimento sem estimar rentabilidade futura."""
+    erros = []
+    produto = (form.get("produto") or "").strip()
+    instituicao = (form.get("instituicao") or "").strip()
+    indexador = (form.get("indexador") or "").strip()
+    valor = converter_valor(form.get("valor"))
+    taxa_txt = (form.get("taxa_anual") or "").strip()
+    taxa = None if not taxa_txt else converter_valor(taxa_txt)
+    data_txt = (form.get("data_aplicacao") or "").strip()
+    vencimento_txt = (form.get("vencimento") or "").strip()
+
+    if produto not in PRODUTOS_INVESTIMENTO:
+        erros.append("Escolha um tipo de investimento válido.")
+    if not instituicao or len(instituicao) > 100:
+        erros.append("Informe uma instituição com até 100 caracteres.")
+    if valor is None or valor <= 0:
+        erros.append("Informe um valor aplicado maior que zero.")
+    if indexador not in INDEXADORES_INVESTIMENTO:
+        erros.append("Escolha um indexador válido.")
+    if taxa_txt and (taxa is None or taxa < 0 or taxa > 1000):
+        erros.append("Informe uma taxa anual entre 0 e 1.000%, ou deixe em branco.")
+    try:
+        data_aplicacao = datetime.strptime(data_txt, "%Y-%m-%d").date()
+    except ValueError:
+        data_aplicacao = None
+        erros.append("Informe uma data de aplicação válida.")
+    try:
+        vencimento = datetime.strptime(vencimento_txt, "%Y-%m-%d").date() if vencimento_txt else None
+    except ValueError:
+        vencimento = None
+        erros.append("Informe uma data de vencimento válida.")
+    if data_aplicacao and vencimento and vencimento < data_aplicacao:
+        erros.append("O vencimento não pode ser anterior à aplicação.")
+
+    return {
+        "produto": produto,
+        "instituicao": instituicao,
+        "valor": valor,
+        "indexador": indexador,
+        "taxa_anual": taxa,
+        "data_aplicacao": data_aplicacao,
+        "vencimento": vencimento,
+    }, erros

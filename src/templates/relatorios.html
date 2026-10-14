@@ -5,7 +5,7 @@
   <div>
     <span class="sobre-titulo">Decisões com mais clareza</span>
     <h1>Relatórios</h1>
-    <p>Compare suas entradas e saídas e entenda para onde vai seu dinheiro.</p>
+    <p>Uma leitura clara das entradas, despesas e aplicações da sua vida financeira.</p>
   </div>
 </header>
 <section class="card filtros-card">
@@ -14,25 +14,59 @@
     <button class="btn" type="submit">Atualizar relatório</button>
   </form>
 </section>
-<section class="indicadores">
+<section class="indicadores relatorio-indicadores">
   <article class="card"><span class="rotulo">Receitas do mês</span><strong class="numero receita">{{ receitas|brl }}</strong></article>
   <article class="card"><span class="rotulo">Despesas do mês</span><strong class="numero despesa">{{ despesas|brl }}</strong></article>
-  <article class="card"><span class="rotulo">Resultado</span><strong class="numero {{ 'despesa' if saldo < 0 }}">{{ saldo|brl }}</strong></article>
+  <article class="card"><span class="rotulo">Aplicado no mês</span><strong class="numero">{{ investimentos|brl }}</strong><span class="metric-legenda">Separado das despesas</span></article>
+  <article class="card"><span class="rotulo">Resgatado no mês</span><strong class="numero">{{ resgates|brl }}</strong><span class="metric-legenda">Retornado ao saldo disponível</span></article>
+  <article class="card"><span class="rotulo">Saldo disponível atual</span><strong class="numero {{ 'despesa' if saldo < 0 }}">{{ saldo|brl }}</strong><span class="metric-legenda">Após despesas e saldo investido</span></article>
+</section>
+<section class="card card-evolucao">
+  <div class="card-titulo">
+    <div><h2>Saldo ao longo do tempo</h2><p>Veja a evolução do seu saldo disponível com uma visualização inspirada no mercado financeiro.</p></div>
+  </div>
+  <form method="get" class="filtros-grafico">
+    <input type="hidden" name="mes" value="{{ mes }}">
+    <label for="periodo-grafico">Período
+      <select id="periodo-grafico" name="periodo" data-periodo-grafico>
+        {% for valor, rotulo in periodos_grafico %}
+        <option value="{{ valor }}" {{ 'selected' if periodo_grafico == valor }}>{{ rotulo }}</option>
+        {% endfor %}
+        <option value="personalizado" {{ 'selected' if periodo_grafico == 'personalizado' }}>Escolher datas</option>
+      </select>
+    </label>
+    <label for="inicio-grafico">De
+      <input id="inicio-grafico" type="date" name="inicio" value="{{ inicio_grafico }}" data-data-grafico>
+    </label>
+    <label for="fim-grafico">Até
+      <input id="fim-grafico" type="date" name="fim" value="{{ fim_grafico }}" data-data-grafico>
+    </label>
+    <button class="btn btn-p" type="submit">Aplicar período</button>
+    <small>Preencha apenas uma data para ver somente aquele dia.</small>
+  </form>
+  <div class="grafico-controles" role="group" aria-label="Tipo de visualização do gráfico">
+    <button type="button" class="btn btn-sec btn-p ativo" data-tipo-grafico="barras" aria-pressed="true">Barras</button>
+    <button type="button" class="btn btn-sec btn-p" data-tipo-grafico="linhas" aria-pressed="false">Linhas</button>
+  </div>
+  <div class="grafico-evolucao" data-dados='{{ dados_grafico }}' data-granularidade="{{ granularidade_grafico }}" data-tipo="barras"></div>
+  <p class="vazio" hidden>Não há movimentações ou aplicações neste período.</p>
+  <p class="nota-relatorio">O gráfico representa a evolução do saldo disponível (receitas menos despesas e aplicações, somadas aos resgates), não cotações de ativos.</p>
 </section>
 <section class="duas-colunas">
+  <article class="card">
+    <div class="card-titulo"><div><h2>Despesas por categoria</h2><p>Distribuição dos gastos em {{ mes }}</p></div></div>
+    <div class="grafico" data-dados='{{ grafico }}'></div>
+    <p class="vazio" hidden>Sem despesas neste mês.</p>
+  </article>
   <article class="card">
     <h2>Receitas × despesas</h2>
     {% if receitas or despesas %}
     <div class="comparar">
-      <div><span>Receitas</span><div class="trilho"><i class="barra-receita" style="width: {{ pct_receitas }}%"></i></div></div>
-      <div><span>Despesas</span><div class="trilho"><i class="barra-despesa" style="width: {{ pct_despesas }}%"></i></div></div>
+      <div><span>Receitas <strong>{{ receitas|brl }}</strong></span><div class="trilho"><i class="barra-receita" style="width: {{ pct_receitas }}%"></i></div></div>
+      <div><span>Despesas <strong>{{ despesas|brl }}</strong></span><div class="trilho"><i class="barra-despesa" style="width: {{ pct_despesas }}%"></i></div></div>
     </div>
+    <p class="nota-relatorio">Aplicações e resgates são transferências da carteira, não despesas de consumo. O saldo disponível já considera o principal ainda investido.</p>
     {% else %}<p class="vazio">Sem movimentações neste mês.</p>{% endif %}
-  </article>
-  <article class="card">
-    <h2>Gastos por categoria</h2>
-    <div class="grafico" data-dados='{{ grafico }}'></div>
-    <p class="vazio" hidden>Sem despesas neste mês.</p>
   </article>
 </section>
 {% endblock %}

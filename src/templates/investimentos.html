@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block titulo %}Investimentos · Finora{% endblock %}
+{% block conteudo %}
+<header class="cabecalho-pagina">
+  <div>
+    <span class="sobre-titulo">Faça seu dinheiro trabalhar com clareza</span>
+    <h1>Investimentos</h1>
+    <p>Acompanhe sua carteira de renda fixa sem misturar aplicações às despesas.</p>
+  </div>
+</header>
+<section class="indicadores investimentos-indicadores">
+  <article class="card"><span class="rotulo">Saldo disponível</span><strong class="numero">{{ saldo_disponivel|brl }}</strong><span class="metric-legenda">Depois de despesas e aplicações</span></article>
+  <article class="card"><span class="rotulo">Principal investido</span><strong class="numero">{{ total_investido|brl }}</strong><span class="metric-legenda">Sem estimativa de rendimento futuro</span></article>
+</section>
+<section class="card">
+  <div class="card-titulo"><div><h2>Registrar aplicação</h2><p>Informe os dados do produto como aparecem na sua instituição financeira.</p></div></div>
+  <form method="post" class="form-grade form-investimento">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <label>Produto
+      <select name="produto" required>
+        <option value="">Selecione</option>
+        {% for produto in produtos %}<option value="{{ produto }}" {% if form.get('produto') == produto %}selected{% endif %}>{{ produto }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Instituição
+      <input name="instituicao" maxlength="100" required value="{{ form.get('instituicao', '') }}" placeholder="Ex.: Banco ou corretora">
+    </label>
+    <label>Valor aplicado (R$)
+      <input name="valor" inputmode="decimal" required value="{{ form.get('valor', '') }}" placeholder="0,00">
+    </label>
+    <label>Indexador
+      <select name="indexador" required>
+        <option value="">Selecione</option>
+        {% for indexador in indexadores %}<option value="{{ indexador }}" {% if form.get('indexador') == indexador %}selected{% endif %}>{{ indexador }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Taxa anual (%), se informada
+      <input name="taxa_anual" inputmode="decimal" value="{{ form.get('taxa_anual', '') }}" placeholder="Ex.: 12,5">
+    </label>
+    <label>Data da aplicação
+      <input type="date" name="data_aplicacao" required value="{{ form.get('data_aplicacao', hoje) }}">
+    </label>
+    <label>Vencimento (opcional)
+      <input type="date" name="vencimento" value="{{ form.get('vencimento', '') }}">
+    </label>
+    <button class="btn" type="submit">Registrar investimento</button>
+  </form>
+  <p class="nota-relatorio">A Finora registra o principal aplicado e não projeta rendimentos. Consulte sua instituição para saldo atualizado, impostos e condições de resgate.</p>
+</section>
+<section class="secao-investimentos">
+  <div class="card-titulo"><div><h2>Sua carteira</h2><p>O principal em aberto reduz o saldo disponível. Resgates devolvem o valor à sua disponibilidade.</p></div></div>
+  {% if lista %}
+  <div class="carteira">
+    {% for item in lista %}
+    <article class="card investimento-item">
+      <div class="investimento-cabecalho">
+        <div><span class="etiqueta">{{ item.produto }}</span><h3>{{ item.instituicao }}</h3></div>
+        <strong class="investimento-saldo">{{ item.saldo_atual|brl }}</strong>
+      </div>
+      <dl class="investimento-detalhes">
+        <div><dt>Aplicado</dt><dd>{{ item.valor_inicial|brl }}</dd></div>
+        <div><dt>Indexador</dt><dd>{{ item.indexador }}{% if item.taxa_anual is not none %} · {{ item.taxa_anual }}% a.a.{% endif %}</dd></div>
+        <div><dt>Data da aplicação</dt><dd>{{ item.data_aplicacao|data_br }}</dd></div>
+        <div><dt>Vencimento</dt><dd>{{ item.vencimento|data_br if item.vencimento else 'Não informado' }}</dd></div>
+      </dl>
+      {% if item.saldo_atual > 0 %}
+      <form method="post" action="{{ url_for('resgatar_investimento', id_=item.id) }}" class="form-resgate">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <label>Registrar resgate (R$)
+          <input name="valor" inputmode="decimal" required placeholder="Até {{ item.saldo_atual|brl }}">
+        </label>
+        <button class="btn btn-sec btn-p" type="submit">Resgatar</button>
+      </form>
+      {% else %}<p class="investimento-resgatado">Principal totalmente resgatado.</p>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <section class="card vazio-card"><p class="vazio">Sua carteira está vazia. Cadastre uma aplicação para acompanhar seu principal investido.</p></section>
+  {% endif %}
+</section>
+{% endblock %}
