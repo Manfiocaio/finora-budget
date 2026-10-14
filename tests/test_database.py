@@ -321,6 +321,8 @@ def test_perfil_edita_nome_foto_e_estatisticas(tmp_path, monkeypatch):
 
     page = client.get("/perfil")
     assert page.status_code == 200
+    assert b"salva automaticamente" in page.data
+    assert b">Salvar foto</button>" in page.data
     assert b"Movimenta\xc3\xa7\xc3\xb5es registradas" in page.data
     assert b">1</strong>" in page.data
 
